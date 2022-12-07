@@ -93,6 +93,7 @@ fn elf_calories() -> Result<Vec<usize>> {
                 Some(total)
             }
         })
+        .filter(|&x| x != 0)
         .collect())
 }
 

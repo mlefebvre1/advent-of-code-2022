@@ -74,7 +74,7 @@ fn second() -> Result<String> {
     let data = fs::read_to_string("src/days/data/day2.txt")?;
     let total_score: usize = data
         .lines()
-        .map(|line| Round2::from_str(line).unwrap().score())
+        .map(|line| RoundWithOutcomeGiven::from_str(line).unwrap().score())
         .sum();
     Ok(total_score.to_string())
 }
@@ -105,8 +105,8 @@ impl FromStr for Choice {
         }
     }
 }
-impl From<Round2> for Choice {
-    fn from(round: Round2) -> Self {
+impl From<RoundWithOutcomeGiven> for Choice {
+    fn from(round: RoundWithOutcomeGiven) -> Self {
         match (round.opponent_choice, round.round_outcome) {
             (Self::Rock, RoundOutcome::Lost) => Self::Scissors,
             (Self::Rock, RoundOutcome::Draw) => Self::Rock,
@@ -186,11 +186,11 @@ impl Round {
 }
 
 #[derive(Debug, Clone)]
-struct Round2 {
+struct RoundWithOutcomeGiven {
     round_outcome: RoundOutcome,
     opponent_choice: Choice,
 }
-impl FromStr for Round2 {
+impl FromStr for RoundWithOutcomeGiven {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut s = s.split_whitespace();
@@ -202,7 +202,7 @@ impl FromStr for Round2 {
         })
     }
 }
-impl Round2 {
+impl RoundWithOutcomeGiven {
     fn score(self) -> usize {
         let choice_value = Choice::from(self.clone()).score();
         choice_value + self.round_outcome.score()
