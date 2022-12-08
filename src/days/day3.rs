@@ -145,7 +145,7 @@ fn get_items_priority_total(items: &HashSet<char>) -> usize {
             if item.is_uppercase() {
                 item as usize - 38 // 'A'=65 and we rebase to 27 so.. 65-27
             } else {
-                item as usize - 96 // 'a' = 97 and we rebase to 0 so 97-1
+                item as usize - 96 // 'a' = 97 and we rebase to 1 so 97-1
             }
         })
         .sum()

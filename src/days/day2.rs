@@ -47,7 +47,10 @@ fn first() -> Result<String> {
     let data = fs::read_to_string("src/days/data/day2.txt")?;
     let total_score: usize = data
         .lines()
-        .map(|line| Round::from_str(line).unwrap().score())
+        .map(|line| {
+            let score: usize = Round::from_str(line).unwrap().into();
+            score
+        })
         .sum();
     Ok(total_score.to_string())
 }
@@ -74,7 +77,10 @@ fn second() -> Result<String> {
     let data = fs::read_to_string("src/days/data/day2.txt")?;
     let total_score: usize = data
         .lines()
-        .map(|line| RoundWithOutcomeGiven::from_str(line).unwrap().score())
+        .map(|line| {
+            let score: usize = RoundWithOutcomeGiven::from_str(line).unwrap().into();
+            score
+        })
         .sum();
     Ok(total_score.to_string())
 }
@@ -85,12 +91,12 @@ enum Choice {
     Paper,
     Scissors,
 }
-impl Choice {
-    fn score(&self) -> usize {
-        match self {
-            Self::Rock => 1,
-            Self::Paper => 2,
-            Self::Scissors => 3,
+impl From<Choice> for usize {
+    fn from(choice: Choice) -> Self {
+        match choice {
+            Choice::Rock => 1,
+            Choice::Paper => 2,
+            Choice::Scissors => 3,
         }
     }
 }
@@ -127,12 +133,12 @@ enum RoundOutcome {
     Draw,
     Won,
 }
-impl RoundOutcome {
-    fn score(&self) -> usize {
-        match self {
-            Self::Lost => 0,
-            Self::Draw => 3,
-            Self::Won => 6,
+impl From<RoundOutcome> for usize {
+    fn from(outcome: RoundOutcome) -> Self {
+        match outcome {
+            RoundOutcome::Lost => 0,
+            RoundOutcome::Draw => 3,
+            RoundOutcome::Won => 6,
         }
     }
 }
@@ -177,10 +183,10 @@ impl FromStr for Round {
         Ok(Self { opponent, you })
     }
 }
-impl Round {
-    fn score(&self) -> usize {
-        let round_outcome = RoundOutcome::from(self.clone()).score();
-        let choice_value = self.you.clone().score();
+impl From<Round> for usize {
+    fn from(round: Round) -> Self {
+        let round_outcome: usize = RoundOutcome::from(round.clone()).into();
+        let choice_value: usize = round.you.into();
         round_outcome + choice_value
     }
 }
@@ -202,10 +208,11 @@ impl FromStr for RoundWithOutcomeGiven {
         })
     }
 }
-impl RoundWithOutcomeGiven {
-    fn score(self) -> usize {
-        let choice_value = Choice::from(self.clone()).score();
-        choice_value + self.round_outcome.score()
+impl From<RoundWithOutcomeGiven> for usize {
+    fn from(round: RoundWithOutcomeGiven) -> Self {
+        let choice_value: usize = Choice::from(round.clone()).into();
+        let round_outcome: usize = round.round_outcome.into();
+        choice_value + round_outcome
     }
 }
 
