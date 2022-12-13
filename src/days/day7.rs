@@ -243,5 +243,3 @@ mod tests {
         println!("Day7 - Second problem : {}", second().unwrap())
     }
 }
-
-//BAD: 1495837
