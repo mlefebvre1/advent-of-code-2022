@@ -76,7 +76,7 @@ impl Cpu {
         let nb_clk_cycles = instruction.nb_clk_cycle();
         for cycle in 0..nb_clk_cycles {
             self.update_signal_strengh_sum();
-            self.draw_pixel();
+            self.crt.draw_pixel(self.clk_cycle, self.reg_x_value);
             match instruction {
                 Instruction::Addx(v) => {
                     if cycle == nb_clk_cycles - 1 {
@@ -90,23 +90,23 @@ impl Cpu {
     }
     fn update_signal_strengh_sum(&mut self) {
         if (self.clk_cycle + 20) % 40 == 0 {
-            println!("cycle={} X={}", self.clk_cycle, self.reg_x_value);
             self.sum_signal_strenght += (self.clk_cycle as i64) * self.reg_x_value;
-        }
-    }
-    fn draw_pixel(&mut self) {
-        let crt_position = self.clk_cycle - 1;
-        let crt_x = (crt_position % 40) as usize;
-        let crt_y = (crt_position / 40) as usize;
-        let sprite = (self.reg_x_value - 1)..=(self.reg_x_value + 1);
-        if sprite.contains(&((crt_position % 40) as i64)) {
-            self.crt.0[crt_y][crt_x] = true;
         }
     }
 }
 
 #[derive(Debug)]
 struct Crt([[bool; 40]; 6]);
+impl Crt {
+    fn draw_pixel(&mut self, cpu_clk_cycle: u64, reg_value: i64) {
+        let x = (cpu_clk_cycle - 1) % 40;
+        let y = (cpu_clk_cycle - 1) / 40;
+        let sprite = (reg_value - 1)..=(reg_value + 1);
+        if sprite.contains(&(x as i64)) {
+            self.0[y as usize][x as usize] = true;
+        }
+    }
+}
 impl Default for Crt {
     fn default() -> Self {
         Self([[false; 40]; 6])
