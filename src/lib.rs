@@ -1,1 +1,2 @@
 mod days;
+mod graph;
