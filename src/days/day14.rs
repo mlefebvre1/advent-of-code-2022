@@ -6,27 +6,17 @@ use std::iter::zip;
 
 #[allow(dead_code)]
 fn first() -> Result<String> {
-    let mut cave = Cave::new("src/days/data/day14.txt")?;
+    let mut cave = Cave::new_part1("src/days/data/day14.txt")?;
     cave.run();
-    let ans = cave
-        .grid
-        .iter()
-        .filter(|point_type| matches!(point_type, PointType::Sand))
-        .count();
-
+    let ans = cave.nb_sands();
     Ok(ans.to_string())
 }
 
 #[allow(dead_code)]
 fn second() -> Result<String> {
-    let mut cave = Cave::new2("src/days/data/day14_b.txt")?;
-    // cave.run();
-    let ans = cave
-        .grid
-        .iter()
-        .filter(|point_type| matches!(point_type, PointType::Sand))
-        .count();
-    println!("{}", cave.grid);
+    let mut cave = Cave::new_part2("src/days/data/day14.txt")?;
+    cave.run();
+    let ans = cave.nb_sands();
     Ok(ans.to_string())
 }
 
@@ -76,13 +66,13 @@ struct Cave {
     ymax: usize,
 }
 impl Cave {
-    pub fn new(file: &str) -> Result<Self> {
+    pub fn new_part1(file: &str) -> Result<Self> {
         let point_chains = Self::load_file(file)?;
         let points = point_chains.iter().flatten().collect_vec();
         let ((x_min, y_min), (x_max, y_max)) = Self::find_limits(&points);
-        let (dy, dx) = (y_max - y_min + 1, x_max - x_min + 1);
+        let (dy, dx) = (y_max - y_min, x_max - x_min);
         let cave = Self {
-            grid: ndarray::Array2::default((dy, dx)),
+            grid: ndarray::Array2::default((dy + 1, dx + 1)),
             sand_source: Point {
                 x: 500 - x_min,
                 y: 0,
@@ -94,30 +84,36 @@ impl Cave {
         let cave = Self::add_rock_walls(cave, &point_chains, x_min);
         Ok(cave)
     }
-    pub fn new2(file: &str) -> Result<Self> {
+    pub fn new_part2(file: &str) -> Result<Self> {
         let point_chains = Self::load_file(file)?;
         let points = point_chains.iter().flatten().collect_vec();
         let ((x_min, y_min), (x_max, y_max)) = Self::find_limits(&points);
-        let (dy, dx) = ((y_max - y_min) + 1, (x_max - x_min) + 1);
+        let (dy, dx) = (y_max - y_min, x_max - x_min);
+        // x space needs to be much larger because sand will exceed x_min and x_max (look at the example they provide)
         let cave = Self {
-            grid: ndarray::Array2::default((dy * 2, dx * 2)),
-            sand_source: Point {
-                x: 500 - dx / 2,
-                y: 0,
-            },
-            xmax: dx,
-            ymax: dy,
+            grid: ndarray::Array2::default(((dy + 2) + 1, (dx * 8) + 1)),
+            sand_source: Point { x: dx * 4, y: 0 },
+            xmax: dx * 8,
+            ymax: dy + 2,
         };
-        println!("ymax={y_max}");
         let cave = Self::add_sand_source(cave);
-        let cave = Self::add_rock_walls(cave, &point_chains, dx / 2);
+        let cave = Self::add_rock_walls(cave, &point_chains, 500 - dx * 4);
         let cave = Self::add_floor(cave, y_max);
         Ok(cave)
     }
     pub fn run(&mut self) {
         while let Some(sand) = self.get_next_sand() {
             self.grid[[sand.y, sand.x]] = PointType::Sand;
+            if sand.x == self.sand_source.x && sand.y == self.sand_source.y {
+                break;
+            }
         }
+    }
+    pub fn nb_sands(&self) -> usize {
+        self.grid
+            .iter()
+            .filter(|point_type| matches!(point_type, PointType::Sand))
+            .count()
     }
     fn load_file(file: &str) -> Result<Vec<Vec<Point>>> {
         let data = std::fs::read_to_string(file)?;
@@ -139,14 +135,14 @@ impl Cave {
         cave.grid[[cave.sand_source.y, cave.sand_source.x]] = PointType::SandSource;
         cave
     }
-    fn add_rock_walls(mut cave: Self, point_chains: &[Vec<Point>], x_min: usize) -> Self {
+    fn add_rock_walls(mut cave: Self, point_chains: &[Vec<Point>], x_translation: usize) -> Self {
         let adjusted_chains = point_chains
             .iter()
             .map(|chain| {
                 chain
                     .iter()
                     .map(|point| Point {
-                        x: point.x - x_min,
+                        x: point.x - x_translation,
                         y: point.y,
                     })
                     .collect_vec()
@@ -184,7 +180,7 @@ impl Cave {
         let mut sand_position = self.sand_source;
         loop {
             if !self.is_sand_blocked_down(sand_position) {
-                if sand_position.y + 1 == self.ymax - 1 {
+                if sand_position.y + 1 == self.ymax {
                     return None;
                 } else {
                     sand_position.y += 1;
@@ -192,7 +188,7 @@ impl Cave {
                 }
             }
             if !self.is_sand_blocked_down_left(sand_position) {
-                if sand_position.x - 1 == 0 || sand_position.y + 1 == self.ymax - 1 {
+                if sand_position.x - 1 == 0 || sand_position.y + 1 == self.ymax {
                     return None;
                 } else {
                     sand_position.x -= 1;
@@ -201,7 +197,7 @@ impl Cave {
                 }
             }
             if !self.is_sand_blocked_down_right(sand_position) {
-                if sand_position.x + 1 == self.xmax - 1 || sand_position.y + 1 == self.ymax - 1 {
+                if sand_position.x + 1 == self.xmax || sand_position.y + 1 == self.ymax {
                     return None;
                 } else {
                     sand_position.x += 1;
