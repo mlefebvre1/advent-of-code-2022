@@ -1,13 +1,33 @@
-[package]
-name = "advent-of-code-2022"
-version = "0.1.0"
-edition = "2021"
+[workspace]
+members = [
+    "aoc-utils",
+    "day1",
+    "day2",
+    "day3",
+    "day4",
+    "day5",
+    "day6",
+    "day7",
+    "day8",
+    "day9",
+    "day10",
+    "day11",
+    "day12",
+    "day13",
+    "day14",
+    "day15",
+]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+# [package]
+# name = "advent-of-code-2022"
+# version = "0.1.0"
+# edition = "2021"
 
-[dependencies]
-serde_json = "1"
-anyhow = "1"
-itertools = "0.10"
-ndarray = "0.15"
-num = "0.4"
+# # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+# [dependencies]
+# serde_json = "1"
+# anyhow = "1"
+# itertools = "0.10"
+# ndarray = "0.15"
+# num = "0.4"
