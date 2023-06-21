@@ -1,8 +1,8 @@
-use std::{fmt::Display, str::FromStr};
-
 use anyhow::{Error, Result};
 use itertools::Itertools;
+use std::fmt::Display;
 use std::iter::zip;
+use std::str::FromStr;
 
 fn main() -> Result<()> {
     println!("First part : {}", first()?);
