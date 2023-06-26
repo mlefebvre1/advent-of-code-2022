@@ -1,12 +1,13 @@
 mod definitions;
 mod map;
 
-use std::fs;
-
-use definitions::{Beacon, Sensor};
-
 use definitions::Point;
-use map::{manhattan_distance, Position};
+use definitions::{Beacon, Sensor};
+use map::{manhattan_distance, DevicePairs, Position};
+use num::{BigInt, FromPrimitive};
+use std::fs;
+use std::ops::Range;
+use std::str::FromStr;
 
 fn main() -> anyhow::Result<()> {
     println!("First part : {}", first()?);
@@ -17,12 +18,11 @@ fn main() -> anyhow::Result<()> {
 #[allow(non_upper_case_globals)]
 fn first() -> anyhow::Result<String> {
     let data = fs::read_to_string("day15/data/day15.txt")?;
-    let mut m = map::Map::new(&data)?;
+    let mut m = map::Map::new(&data, None)?;
     const y: isize = 2000000;
     for pair in m.devices.0.iter() {
         let (sensor, beacon) = (&pair.0, &pair.1);
         let manhattan_dist = manhattan_distance(&sensor.0, &beacon.0);
-
         let (xmin, xmax) = (
             sensor.0.x - manhattan_dist as isize,
             sensor.0.x + manhattan_dist as isize,
@@ -44,6 +44,7 @@ fn first() -> anyhow::Result<String> {
             }
         }
     }
+
     let ans = m
         .lane
         .iter()
@@ -54,5 +55,49 @@ fn first() -> anyhow::Result<String> {
 }
 
 fn second() -> anyhow::Result<String> {
-    Ok("".to_string())
+    let data = fs::read_to_string("day15/data/day15.txt")?;
+    let ans = find_frequency_tuning(&data).unwrap();
+    Ok(ans.to_string())
+}
+
+fn find_frequency_tuning(data: &str) -> Option<BigInt> {
+    const M: usize = 4000000;
+    let pairs = DevicePairs::from_str(&data).unwrap();
+    for y in 0..M {
+        let mut ranges = Vec::new();
+        for pair in pairs.0.iter() {
+            let sensor = &pair.0;
+            let beacon = &pair.1;
+            let manhattan_dist = manhattan_distance(&sensor.0, &beacon.0);
+            let xspan = manhattan_dist as isize - (sensor.0.y - y as isize).abs();
+            if xspan > 0 {
+                let xmin = std::cmp::max(sensor.0.x - xspan, 0);
+                let xmax = std::cmp::min(sensor.0.x + xspan, M as isize);
+                let r = xmin..xmax;
+                ranges.push(r);
+            }
+            ranges.sort_by_key(|k| k.start);
+        }
+        if ranges.len() >= 2 {
+            if let Some(x) = merge_ranges(ranges) {
+                let mut ans = BigInt::from_usize(y).unwrap();
+                ans += (x as usize) * M;
+                return Some(ans);
+            }
+        }
+    }
+    None
+}
+
+fn merge_ranges(ranges: Vec<Range<isize>>) -> Option<isize> {
+    let mut current = ranges.iter().next().unwrap().clone();
+    for range in ranges.iter().skip(1) {
+        if range.start <= current.end + 1 {
+            current.start = std::cmp::min(current.start, range.start);
+            current.end = std::cmp::max(current.end, range.end);
+        } else {
+            return Some(current.end + 1);
+        }
+    }
+    None
 }

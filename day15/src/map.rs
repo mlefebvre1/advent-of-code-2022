@@ -2,6 +2,12 @@ use crate::definitions::{Beacon, Point, Sensor};
 use anyhow::{Error, Result};
 use std::{fmt::Display, str::FromStr};
 
+pub fn manhattan_distance(p1: &Point, p2: &Point) -> usize {
+    let (x1, x2) = (p1.x, p2.x);
+    let (y1, y2) = (p1.y, p2.y);
+    ((x1 - x2).abs() + (y1 - y2).abs()) as usize
+}
+
 #[derive(Debug)]
 pub struct DevicePair(pub Sensor, pub Beacon);
 
@@ -18,6 +24,16 @@ impl DevicePair {
     pub fn x_max(&self) -> isize {
         let sensor = &self.0;
         sensor.0.x + self.manhattan_distance() as isize
+    }
+
+    pub fn y_min(&self) -> isize {
+        let sensor = &self.0;
+        sensor.0.y - self.manhattan_distance() as isize
+    }
+
+    pub fn y_max(&self) -> isize {
+        let sensor = &self.0;
+        sensor.0.y + self.manhattan_distance() as isize
     }
 }
 
@@ -82,9 +98,13 @@ pub struct Map {
     pub devices: DevicePairs,
 }
 impl Map {
-    pub fn new(s: &str) -> Result<Self> {
+    pub fn new(s: &str, max_len: Option<usize>) -> Result<Self> {
         let devices = DevicePairs::from_str(s)?;
-        let lane = vec![Position::default(); devices.shape()];
+        let lane = if let Some(len) = max_len {
+            vec![Position::default(); len]
+        } else {
+            vec![Position::default(); devices.shape()]
+        };
         Ok(Self { lane, devices })
     }
 
@@ -93,8 +113,16 @@ impl Map {
     }
 }
 
-pub fn manhattan_distance(p1: &Point, p2: &Point) -> usize {
-    let (x1, x2) = (p1.x, p2.x);
-    let (y1, y2) = (p1.y, p2.y);
-    ((x1 - x2).abs() + (y1 - y2).abs()) as usize
+pub struct Map2D {
+    pub grid: ndarray::Array2<Position>,
+    pub devices: DevicePairs,
+}
+
+impl Map2D {
+    pub fn new(s: &str, max_coord: usize) -> Result<Self> {
+        let devices = DevicePairs::from_str(s)?;
+        println!("{}", devices.x_min());
+        let grid = ndarray::Array2::default((max_coord, max_coord));
+        Ok(Self { grid, devices })
+    }
 }
