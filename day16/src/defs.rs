@@ -54,7 +54,6 @@ pub struct Solve {
 #[derive(Clone)]
 struct State {
     current_valve_index: ValveIndex,
-    busy: bool,
     mins_remaining: isize,
 }
 
@@ -144,12 +143,10 @@ impl Solve {
 
         let human_state = State {
             current_valve_index: ValveIndex::Broken(start_index),
-            busy: false,
             mins_remaining: 26,
         };
         let elephant_state = State {
             current_valve_index: ValveIndex::Broken(start_index),
-            busy: false,
             mins_remaining: 26,
         };
 
@@ -217,7 +214,7 @@ impl Solve {
                     elephant_new_mins,
                     self.valve_pressures[next_elephant_index].1,
                 );
-                let (mut new_human_state, mut new_elephant_state) = Self::update_state(
+                let (new_human_state, new_elephant_state) = Self::update_state(
                     &human_state,
                     &elephant_state,
                     &mut new_valve_visited,
@@ -230,7 +227,6 @@ impl Solve {
                     &mut new_total_pressure,
                     false,
                 );
-                Self::set_busy(&mut new_human_state, &mut new_elephant_state);
                 self.solve_part2_recurse(
                     new_total_pressure,
                     new_valve_visited,
@@ -261,7 +257,7 @@ impl Solve {
             let new_elephant_total_pressure =
                 Self::get_new_total_pressure(elephant_new_mins, self.valve_pressures[next_i].1);
 
-            let (mut new_human_state, mut new_elephant_state) = Self::update_state(
+            let (new_human_state, new_elephant_state) = Self::update_state(
                 &human_state,
                 &elephant_state,
                 &mut new_valve_visited,
@@ -274,27 +270,12 @@ impl Solve {
                 &mut new_total_pressure,
                 true,
             );
-            Self::set_busy(&mut new_human_state, &mut new_elephant_state);
             self.solve_part2_recurse(
                 new_total_pressure,
                 new_valve_visited,
                 new_human_state,
                 new_elephant_state,
             )
-        }
-    }
-
-    #[inline]
-    fn set_busy(human_state: &mut State, elephant_state: &mut State) {
-        if human_state.mins_remaining > elephant_state.mins_remaining {
-            human_state.busy = false;
-            elephant_state.busy = true;
-        } else if human_state.mins_remaining < elephant_state.mins_remaining {
-            human_state.busy = true;
-            elephant_state.busy = false;
-        } else {
-            human_state.busy = false;
-            elephant_state.busy = false;
         }
     }
 
@@ -314,49 +295,31 @@ impl Solve {
     ) -> (State, State) {
         let mut new_human_state = human_state.clone();
         let mut new_elephant_state = elephant_state.clone();
-        match (new_human_state.busy, new_elephant_state.busy) {
-            (true, true) => (), // can't occur
-            (false, true) => {
+
+        if one {
+            if new_human_state.mins_remaining > new_elephant_state.mins_remaining {
                 new_human_state.mins_remaining = new_human_mins;
                 new_human_state.current_valve_index = ValveIndex::Nonbroken(new_human_index);
                 new_valve_visited[new_human_index] = true;
                 *total_pressure += new_human_total_pressure;
-            } // only human goes to a next valve
-            (true, false) => {
+            } else {
                 new_elephant_state.mins_remaining = new_elephant_mins;
                 new_elephant_state.current_valve_index = ValveIndex::Nonbroken(new_elephant_index);
                 new_valve_visited[new_elephant_index] = true;
                 *total_pressure += new_elephant_total_pressure;
-            } // only elephant goes to a next valve
-            (false, false) => {
-                if one {
-                    if new_human_state.mins_remaining > new_elephant_state.mins_remaining {
-                        new_human_state.mins_remaining = new_human_mins;
-                        new_human_state.current_valve_index =
-                            ValveIndex::Nonbroken(new_human_index);
-                        new_valve_visited[new_human_index] = true;
-                        *total_pressure += new_human_total_pressure;
-                    } else {
-                        new_elephant_state.mins_remaining = new_elephant_mins;
-                        new_elephant_state.current_valve_index =
-                            ValveIndex::Nonbroken(new_elephant_index);
-                        new_valve_visited[new_elephant_index] = true;
-                        *total_pressure += new_elephant_total_pressure;
-                    }
-                } else {
-                    new_human_state.mins_remaining = new_human_mins;
-                    new_human_state.current_valve_index = ValveIndex::Nonbroken(new_human_index);
-                    new_valve_visited[new_human_index] = true;
-                    *total_pressure += new_human_total_pressure;
+            }
+        } else {
+            new_human_state.mins_remaining = new_human_mins;
+            new_human_state.current_valve_index = ValveIndex::Nonbroken(new_human_index);
+            new_valve_visited[new_human_index] = true;
+            *total_pressure += new_human_total_pressure;
 
-                    new_elephant_state.mins_remaining = new_elephant_mins;
-                    new_elephant_state.current_valve_index =
-                        ValveIndex::Nonbroken(new_elephant_index);
-                    new_valve_visited[new_elephant_index] = true;
-                    *total_pressure += new_elephant_total_pressure;
-                }
-            } // both can go to a next valve
+            new_elephant_state.mins_remaining = new_elephant_mins;
+            new_elephant_state.current_valve_index = ValveIndex::Nonbroken(new_elephant_index);
+            new_valve_visited[new_elephant_index] = true;
+            *total_pressure += new_elephant_total_pressure;
         }
+
         (new_human_state, new_elephant_state)
     }
 
@@ -387,13 +350,3 @@ impl Solve {
         mat
     }
 }
-
-// DD => 24*20
-// JJ => 23*21
-// BB => 19*13
-// HH => 19*22
-// CC => 17*2
-// EE => 15*3
-
-// 0=>BB, 1=>CC, 2=>DD, 3=>EE, 4=>HH, 5=>JJ
-// [2,5,0,4,1,3]
