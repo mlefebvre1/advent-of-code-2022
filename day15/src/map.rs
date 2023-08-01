@@ -25,16 +25,6 @@ impl DevicePair {
         let sensor = &self.0;
         sensor.0.x + self.manhattan_distance() as isize
     }
-
-    pub fn y_min(&self) -> isize {
-        let sensor = &self.0;
-        sensor.0.y - self.manhattan_distance() as isize
-    }
-
-    pub fn y_max(&self) -> isize {
-        let sensor = &self.0;
-        sensor.0.y + self.manhattan_distance() as isize
-    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -81,7 +71,7 @@ impl FromStr for DevicePairs {
 
 impl DevicePairs {
     pub fn shape(&self) -> usize {
-        (self.x_min() - self.x_max()).abs() as usize
+        (self.x_min() - self.x_max()).unsigned_abs()
     }
 
     // pub fn origin(&self) -> Point {}
@@ -110,19 +100,5 @@ impl Map {
 
     pub fn offset(&self) -> isize {
         self.devices.x_min()
-    }
-}
-
-pub struct Map2D {
-    pub grid: ndarray::Array2<Position>,
-    pub devices: DevicePairs,
-}
-
-impl Map2D {
-    pub fn new(s: &str, max_coord: usize) -> Result<Self> {
-        let devices = DevicePairs::from_str(s)?;
-        println!("{}", devices.x_min());
-        let grid = ndarray::Array2::default((max_coord, max_coord));
-        Ok(Self { grid, devices })
     }
 }

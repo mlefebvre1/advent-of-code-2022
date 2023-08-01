@@ -62,7 +62,7 @@ fn second() -> anyhow::Result<String> {
 
 fn find_frequency_tuning(data: &str) -> Option<BigInt> {
     const M: usize = 4000000;
-    let pairs = DevicePairs::from_str(&data).unwrap();
+    let pairs = DevicePairs::from_str(data).unwrap();
     for y in 0..M {
         let mut ranges = Vec::new();
         for pair in pairs.0.iter() {
@@ -90,7 +90,7 @@ fn find_frequency_tuning(data: &str) -> Option<BigInt> {
 }
 
 fn merge_ranges(ranges: Vec<Range<isize>>) -> Option<isize> {
-    let mut current = ranges.iter().next().unwrap().clone();
+    let mut current = ranges.first().unwrap().clone();
     for range in ranges.iter().skip(1) {
         if range.start <= current.end + 1 {
             current.start = std::cmp::min(current.start, range.start);

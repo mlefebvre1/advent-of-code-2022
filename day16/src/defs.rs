@@ -12,23 +12,21 @@ pub struct Valve {
 impl FromStr for Valve {
     type Err = anyhow::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut s = s.split(" ");
+        let mut s = s.split(' ');
         let s = s.by_ref();
-        let label = s.skip(1).next().unwrap().to_string();
+        let label = s.nth(1).unwrap().to_string();
         let flow_rate = s
-            .skip(2) // skip "has flow"
-            .next()
+            .nth(2) // skip "has flow"
             .unwrap()
-            .split("=")
-            .skip(1) // skip "rate"
-            .next()
+            .split('=')
+            .nth(1)
             .unwrap()
-            .replace(";", "")
+            .replace(';', "")
             .parse()?;
 
         let neighbors = s
             .skip(4)
-            .map(|item| item.replace(",", ""))
+            .map(|item| item.replace(',', ""))
             .collect::<Vec<_>>();
         Ok(Self {
             label,
@@ -238,7 +236,7 @@ impl Solve {
             let mut new_valve_visited = valves_visited.clone();
             let mut new_total_pressure = total_pressure;
 
-            let next_i = *unvisited_indexes.iter().next().unwrap();
+            let next_i = *unvisited_indexes.first().unwrap();
             let human_other_valve_absolute_index = self.valve_pressures[next_i].0;
             let human_new_mins = human_state.mins_remaining
                 - (self.distance_matrix[[
@@ -279,6 +277,7 @@ impl Solve {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     #[inline]
     fn update_state(
         human_state: &State,

@@ -75,7 +75,7 @@ where
         .next()
         .unwrap()
         .trim()
-        .split("=")
+        .split('=')
         .nth(1)
         .unwrap()
         .parse()
